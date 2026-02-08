@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turkish Ultimate</title>
+    <style>
+        :root {
+            --primary: #c0392b; /* Turkish Red */
+            --primary-dark: #922b21;
+            --secondary: #2c3e50; /* Deep Blue */
+            --bg: #f8fafc;
+            --paper: #ffffff;
+            --accent: #d35400; /* Gold */
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-gray: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--secondary);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- NAZAR BONCUĞU --- */
+        .nazar-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .nazar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #1e3a8a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border: 3px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+        }
+        .nazar::before { content: ''; width: 70%; height: 70%; background-color: #f8fafc; border-radius: 50%; position: absolute; }
+        .nazar::after { content: ''; width: 45%; height: 45%; background-color: #60a5fa; border-radius: 50%; position: absolute; }
+        .nazar-pupil { width: 22%; height: 22%; background-color: #0f172a; border-radius: 50%; z-index: 2; }
+
+        /* --- HEADER --- */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 2rem 1rem 5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-size: 3rem; font-weight: 800; letter-spacing: -2px; }
+        header p { font-size: 1.1rem; opacity: 0.9; margin-top: 0.5rem; }
+
+        /* Controls Bar (Date & Streak) */
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(5px);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-weight: 600;
+        }
+
+        input[type="date"] {
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+        }
+        /* Fix calendar icon color in some browsers */
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+        .streak-icon { font-size: 1.2rem; }
+
+        /* --- GRID --- */
+        .container {
+            max-width: 1200px;
+            margin: -60px auto 0;
+            padding: 0 2rem 4rem;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card {
+            background: var(--paper);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-top: 6px solid transparent;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .label {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            color: var(--text-gray);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .label::before { content: ''; display: block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        .turkish-text { font-size: 2rem; font-weight: 800; line-height: 1.1; margin: 0 0 0.5rem 0; color: var(--secondary); }
+        .pronunciation { font-family: 'Consolas', monospace; color: var(--accent); font-size: 0.9rem; margin-bottom: 1rem; font-style: italic; }
+        .meaning { font-size: 1.1rem; color: #4b5563; line-height: 1.5; margin-top: auto; border-left: 3px solid #e2e8f0; padding-left: 1rem; }
+
+        /* Card Colors */
+        .card-special { grid-column: span 12; border-top-color: var(--accent); background: linear-gradient(to right, #fff, #fffbf7); }
+        .card-special .label { color: var(--accent); }
+        
+        .card-word { grid-column: span 6; border-top-color: var(--primary); }
+        .card-word .label { color: var(--primary); }
+        
+        .card-idiom { grid-column: span 6; border-top-color: #8e44ad; }
+        .card-idiom .label { color: #8e44ad; }
+        
+        .card-proverb { grid-column: span 12; border-top-color: #2980b9; }
+        .card-proverb .label { color: #2980b9; }
+
+        /* --- QUIZ --- */
+        .quiz-container {
+            grid-column: span 12;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-top: 1rem;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        .score-item { display: flex; align-items: center; gap: 5px; font-size: 1.1rem; }
+        .score-correct { color: var(--success); }
+        .score-wrong { color: var(--danger); }
+
+        .quiz-question { font-size: 1.5rem; margin: 1rem 0; color: var(--secondary); }
+        .quiz-word { color: var(--primary); font-weight: 800; }
+
+        .quiz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+
+        .quiz-btn {
+            background: white; border: 2px solid #e2e8f0; padding: 1.2rem; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; color: var(--secondary); cursor: pointer; transition: all 0.2s;
+        }
+        .quiz-btn:hover:not([disabled]) { border-color: var(--primary); background: #fff1f2; }
+        .quiz-btn.correct { background: #d1fae5; border-color: var(--success); color: #064e3b; }
+        .quiz-btn.wrong { background: #fee2e2; border-color: var(--danger); color: #7f1d1d; opacity: 0.6; }
+
+        @media (max-width: 768px) {
+            .card-word, .card-idiom { grid-column: span 12; }
+            header h1 { font-size: 2.5rem; }
+            .controls-bar { gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="nazar-wrapper">
+        <div class="nazar" onclick="resetApp()" title="Click to Reset App Data">
+            <div class="nazar-pupil"></div>
+        </div>
+    </div>
+
+    <h1>Türkçe Hazinesi</h1>
+    <p>Practice Daily. Build Your Streak.</p>
+
+    <div class="controls-bar">
+        <div class="control-item" title="View past content">
+            <span>📅</span>
+            <input type="date" id="date-picker">
+        </div>
+
+        <div class="control-item" title="Consecutive days practiced">
+            <span class="streak-icon">🔥</span>
+            <span id="streak-count">0</span> Day Streak
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="card card-special">
+        <div class="label">Feature of the Month</div>
+        <h2 class="turkish-text" id="special-tr">...</h2>
+        <div class="pronunciation" id="special-pron">...</div>
+        <div class="meaning" id="special-en">...</div>
+    </div>
+
+    <div class="card card-word">
+        <div class="label">Word of the Day</div>
+        <h2 class="turkish-text" id="word-tr">...</h2>
+        <div class="pronunciation" id="word-pron">...</div>
+        <div class="meaning" id="word-en">...</div>
+    </div>
+
+    <div class="card card-idiom">
+        <div class="label">Idiom of the Day</div>
+        <h2 class="turkish-text" id="idiom-tr">...</h2>
+        <div class="meaning" id="idiom-en">...</div>
+    </div>
+
+    <div class="card card-proverb">
+        <div class="label">Proverb of the Day</div>
+        <h2 class="turkish-text" id="proverb-tr">...</h2>
+        <div class="meaning" id="proverb-en">...</div>
+    </div>
+
+    <div class="quiz-container">
+        <div class="score-board">
+            <div class="score-item score-correct">
+                <span>✔</span> <span id="score-correct">0</span>
+            </div>
+            <div class="score-item score-wrong">
+                <span>✖</span> <span id="score-wrong">0</span>
+            </div>
+        </div>
+        
+        <div class="label" style="justify-content: center;">Daily Challenge</div>
+        <div class="quiz-question">Meaning of "<span class="quiz-word" id="quiz-question"></span>"?</div>
+        
+        <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:1rem;">(Solve to keep streak alive • Refresh for new question)</div>
+        
+        <div class="quiz-grid" id="quiz-options"></div>
+        <div id="quiz-feedback" style="margin-top:1.5rem; font-weight:800; min-height:1.5em;"></div>
+    </div>
+
+</div>
+
+<script>
+    /* ----------------------------------------------------------------
+       DATABASE (Expanded & Verified Literal Translations)
+    ---------------------------------------------------------------- */
+    const DB = {
+        words: [
+            {t:"Kitap", p:"Ki-tap", m:"Book"}, {t:"Kalem", p:"Ka-lem", m:"Pen/Pencil"}, {t:"Masa", p:"Ma-sa", m:"Table"},
+            {t:"Sandalye", p:"San-dal-ye", m:"Chair"}, {t:"Pencere", p:"Pen-je-re", m:"Window"}, {t:"Kapı", p:"Ka-pı", m:"Door"},
+            {t:"Bilgisayar", p:"Bil-gi-sa-yar", m:"Computer"}, {t:"Telefon", p:"Te-le-fon", m:"Telephone"}, {t:"Araba", p:"A-ra-ba", m:"Car"},
+            {t:"Ev", p:"Ev", m:"House/Home"}, {t:"Okul", p:"O-kul", m:"School"}, {t:"Sokak", p:"So-kak", m:"Street"},
+            {t:"Şehir", p:"She-hir", m:"City"}, {t:"Köy", p:"Keuy", m:"Village"}, {t:"Ülke", p:"Uul-ke", m:"Country"},
+            {t:"Deniz", p:"De-niz", m:"Sea"}, {t:"Güneş", p:"Gu-nesh", m:"Sun"}, {t:"Ay", p:"Ay", m:"Moon"},
+            {t:"Yıldız", p:"Yıl-dız", m:"Star"}, {t:"Bulut", p:"Bu-lut", m:"Cloud"}, {t:"Yağmur", p:"Ya-mur", m:"Rain"},
+            {t:"Kar", p:"Kar", m:"Snow"}, {t:"Rüzgar", p:"Ruz-gar", m:"Wind"}, {t:"Ağaç", p:"A-ach", m:"Tree"},
+            {t:"Çiçek", p:"Chi-chek", m:"Flower"}, {t:"Dağ", p:"Da", m:"Mountain"}, {t:"Orman", p:"Or-man", m:"Forest"},
+            {t:"Nehir", p:"Ne-hir", m:"River"}, {t:"Toprak", p:"Top-rak", m:"Soil/Earth"}, {t:"Ateş", p:"A-tesh", m:"Fire"},
+            {t:"Sevgi", p:"Sev-gi", m:"Love"}, {t:"Nefret", p:"Nef-ret", m:"Hate"}, {t:"Korku", p:"Kor-ku", m:"Fear"},
+            {t:"Umut", p:"U-mut", m:"Hope"}, {t:"Mutluluk", p:"Mut-lu-luk", m:"Happiness"}, {t:"Hüzün", p:"Hu-zun", m:"Sadness"},
+            {t:"Barış", p:"Ba-rish", m:"Peace"}, {t:"Savaş", p:"Sa-vash", m:"War"}, {t:"Özgürlük", p:"Oz-gur-luk", m:"Freedom"},
+            {t:"Adalet", p:"A-da-let", m:"Justice"}, {t:"Gerçek", p:"Ger-chek", m:"Truth/Real"}, {t:"Yalan", p:"Ya-lan", m:"Lie"},
+            {t:"Rüya", p:"Ru-ya", m:"Dream"}, {t:"Hayal", p:"Ha-yal", m:"Imagination/Daydream"}, {t:"Düşünce", p:"Du-shun-je", m:"Thought"},
+            {t:"Gelmek", p:"Gel-mek", m:"To come"}, {t:"Gitmek", p:"Git-mek", m:"To go"}, {t:"Sevmek", p:"Sev-mek", m:"To love"},
+            {t:"Görmek", p:"Gor-mek", m:"To see"}, {t:"Bakmak", p:"Bak-mak", m:"To look"}, {t:"Duymak", p:"Duy-mak", m:"To hear"},
+            {t:"Konuşmak", p:"Ko-nush-mak", m:"To speak"}, {t:"Anlamak", p:"An-la-mak", m:"To understand"}, {t:"Bilmek", p:"Bil-mek", m:"To know"},
+            {t:"İstemek", p:"Is-te-mek", m:"To want"}, {t:"Yapmak", p:"Yap-mak", m:"To do/make"}, {t:"Etmek", p:"Et-mek", m:"To do (auxiliary)"},
+            {t:"Çalışmak", p:"Cha-lish-mak", m:"To work/study"}, {t:"Okumak", p:"O-ku-mak", m:"To read"}, {t:"Yazmak", p:"Yaz-mak", m:"To write"},
+            {t:"Güzel", p:"Gu-zel", m:"Beautiful/Good"}, {t:"Çirkin", p:"Chir-kin", m:"Ugly"}, {t:"Büyük", p:"Bu-yuk", m:"Big"},
+            {t:"Küçük", p:"Ku-chuk", m:"Small"}, {t:"Eski", p:"Es-ki", m:"Old (things)"}, {t:"Yeni", p:"Ye-ni", m:"New"},
+            {t:"Genç", p:"Gench", m:"Young"}, {t:"Yaşlı", p:"Yash-lı", m:"Old (people)"}, {t:"Uzun", p:"U-zun", m:"Long/Tall"},
+            {t:"Kısa", p:"Kı-sa", m:"Short"}, {t:"Sıcak", p:"Sı-cak", m:"Hot"}, {t:"Soğuk", p:"So-uk", m:"Cold"},
+            {t:"Zor", p:"Zor", m:"Difficult"}, {t:"Kolay", p:"Ko-lay", m:"Easy"}, {t:"Zengin", p:"Zen-gin", m:"Rich"},
+            {t:"Zaman", p:"Za-man", m:"Time"}, {t:"Saat", p:"Sa-at", m:"Hour/Clock"}, {t:"Dakika", p:"Da-ki-ka", m:"Minute"},
+            {t:"Bugün", p:"Bu-gun", m:"Today"}, {t:"Yarın", p:"Ya-rın", m:"Tomorrow"}, {t:"Dün", p:"Dun", m:"Yesterday"},
+            {t:"Hafta", p:"Haf-ta", m:"Week"}, {t:"Yıl", p:"Yıl", m:"Year"}, {t:"Asır", p:"A-sır", m:"Century"},
+            {t:"Ekmek", p:"Ek-mek", m:"Bread"}, {t:"Su", p:"Su", m:"Water"}, {t:"Yemek", p:"Ye-mek", m:"Food/Meal"},
+            {t:"Kahvaltı", p:"Kah-val-tı", m:"Breakfast"}, {t:"Akşam Yemeği", p:"Ak-sham Ye-me-i", m:"Dinner"},
+            {t:"Elma", p:"El-ma", m:"Apple"}, {t:"Çay", p:"Chay", m:"Tea"}, {t:"Kahve", p:"Kah-ve", m:"Coffee"},
+            {t:"Tuz", p:"Tuz", m:"Salt"}, {t:"Şeker", p:"She-ker", m:"Sugar"}, {t:"Bal", p:"Bal", m:"Honey"}
+        ],
+        idioms: [
+            {t:"Göze girmek", m:"To gain favor. (Lit: To enter the eye)."},
+            {t:"Gözden düşmek", m:"To lose favor. (Lit: To fall from the eye)."},
+            {t:"Kafa ütülemek", m:"To talk too much/annoy. (Lit: To iron the head)."},
+            {t:"Beyni sulanmak", m:"To be confused/senile. (Lit: For one's brain to get watery)."},
+            {t:"Ağzı kulaklarına varmak", m:"To be very happy. (Lit: Mouth reaching ears)."},
+            {t:"Etekleri zil çalmak", m:"To be incredibly excited. (Lit: Skirt bells ringing)."},
+            {t:"El üstünde tutmak", m:"To cherish/respect highly. (Lit: To hold on top of the hand)."},
+            {t:"Avucunun içi gibi bilmek", m:"To know something perfectly. (Lit: To know like the palm of one's hand)."},
+            {t:"Baltayı taşa vurmak", m:"To say something offensive by mistake. (Lit: Hitting the axe on stone)."},
+            {t:"Keçileri kaçırmak", m:"To go crazy. (Lit: To let the goats escape)."},
+            {t:"Pireyi deve yapmak", m:"To exaggerate. (Lit: To make a camel out of a flea)."},
+            {t:"Sinek avlamak", m:"To have no business/customers. (Lit: To hunt flies)."},
+            {t:"Kedi olalı bir fare tutmak", m:"To finally do something useful. (Lit: To catch a mouse since becoming a cat)."},
+            {t:"Balık kavağa çıkınca", m:"Never. (Lit: When the fish climbs the poplar tree)."},
+            {t:"İpe un sermek", m:"To make excuses to avoid work. (Lit: Spreading flour on a rope)."},
+            {t:"Hapı yutmak", m:"To be in big trouble. (Lit: To swallow the pill)."},
+            {t:"Çam devirmek", m:"To make a blunder. (Lit: To knock down a pine tree)."},
+            {t:"Faka basmak", m:"To fall into a trap. (Lit: To step on the snare)."},
+            {t:"Çantada keklik", m:"An easy victory/Sure thing. (Lit: Partridge in the bag)."},
+            {t:"Dudak ısırmak", m:"To be amazed/jealous. (Lit: To bite lip)."},
+            {t:"Küplere binmek", m:"To get very angry. (Lit: To ride on earthern jars)."},
+            {t:"Tadı damağında kalmak", m:"To remain as a sweet memory. (Lit: Taste staying on the palate)."},
+            {t:"Pabucu dama atılmak", m:"To be replaced by someone new. (Lit: Shoe thrown to the roof)."},
+            {t:"Zıvanadan çıkmak", m:"To lose control/go berserk. (Lit: To come out of the inner tube)."},
+            {t:"Ateş pahası", m:"Extremely expensive. (Lit: Price of fire)."},
+            {t:"Bıçak kemiğe dayanmak", m:"To reach the limit of patience. (Lit: Knife touching the bone)."},
+            {t:"Can atmak", m:"To desire strongly. (Lit: To throw life)."},
+            {t:"Dişini sıkmak", m:"To endure difficulty. (Lit: To clench teeth)."},
+            {t:"Dört gözle beklemek", m:"To wait with great anticipation. (Lit: To wait with four eyes)."},
+            {t:"Fındık kabuğunu doldurmaz", m:"Insignificant issue. (Lit: Wouldn't fill a hazelnut shell)."},
+            {t:"Göz boyamak", m:"To deceive via appearance. (Lit: To paint the eye)."},
+            {t:"Göz kulak olmak", m:"To watch over/protect. (Lit: To be eye and ear)."},
+            {t:"Havasını almak", m:"To be disappointed/rebuked. (Lit: To take one's air)."},
+            {t:"İçi içine sığmamak", m:"To be bursting with excitement. (Lit: Inside not fitting inside)."},
+            {t:"İğne ile kuyu kazmak", m:"Doing a hard task with small tools. (Lit: Digging a well with a needle)."},
+            {t:"Kanı kaynamak", m:"To feel sudden affinity/warmth to someone. (Lit: Blood boiling)."},
+            {t:"Kulağına küpe olmak", m:"To be a lesson not to forget. (Lit: To be an earring)."},
+            {t:"Maydanoz olmak", m:"To meddle in everything. (Lit: To be parsley)."},
+            {t:"Nuh diyor peygamber demiyor", m:"To be incredibly stubborn. (Lit: Says Noah but not the Prophet)."},
+            {t:"Pot kırmak", m:"To say something wrong. (Lit: To break a pot)."},
+            {t:"Saman altından su yürütmek", m:"To do sly things secretly. (Lit: Running water under straw)."},
+            {t:"Sırtı yere gelmemek", m:"To be unbeatable/strong. (Lit: Back not touching the ground)."},
+            {t:"Suya götürüp susuz getirmek", m:"To outsmart someone easily. (Lit: Taking to water and bringing back thirsty)."},
+            {t:"Tası tarağı toplamak", m:"To pack up and leave for good. (Lit: To collect bowl and comb)."},
+            {t:"Yağ gibi üste çıkmak", m:"To act innocent despite being guilty. (Lit: Rising to top like oil)."},
+            {t:"Yüz vermemek", m:"To ignore/act cold. (Lit: Not giving face)."},
+            {t:"Zurnanın zırt dediği yer", m:"The most critical/messy point of a situation. (Lit: Where the zurna says zırt)."}
+        ],
+        proverbs: [
+            {t:"Damlaya damlaya göl olur.", m:"Little things add up to big things. (Lit: Drop by drop, it becomes a lake)."},
+            {t:"Sakla samanı, gelir zamanı.", m:"Don't throw away useless things; you may need them later. (Lit: Hide the straw, its time will come)."},
+            {t:"Acele işe şeytan karışır.", m:"Haste makes waste. (Lit: The devil interferes with hurried work)."},
+            {t:"Gülme komşuna, gelir başına.", m:"Don't mock others' bad luck; it will happen to you. (Lit: Don't laugh at your neighbor, it comes to your head)."},
+            {t:"Dost kara günde belli olur.", m:"A friend in need is a friend indeed. (Lit: Friend becomes evident on a dark day)."},
+            {t:"Ayağını yorganına göre uzat.", m:"Live within your means. (Lit: Stretch your feet according to your quilt)."},
+            {t:"Gülü seven dikenine katlanır.", m:"If you want the good, you must accept the bad. (Lit: The one who loves the rose endures the thorn)."},
+            {t:"İşleyen demir ışıldar.", m:"Productivity keeps you sharp. (Lit: Working iron shines)."},
+            {t:"Vakit nakittir.", m:"Time is money. (Lit: Time is cash)."},
+            {t:"Bir elin nesi var, iki elin sesi var.", m:"Collaboration is powerful. (Lit: What does one hand have? Two hands have sound)."},
+            {t:"Öfke ile kalkan zararla oturur.", m:"Acting in anger brings loss. (Lit: He who rises with anger sits with damage)."},
+            {t:"Tatlı dil yılanı deliğinden çıkarır.", m:"Politeness solves problems. (Lit: Sweet tongue draws snake from hole)."},
+            {t:"Üzüm üzüme baka baka kararır.", m:"You become like the people you spend time with. (Lit: Grape darkens by looking at grape)."},
+            {t:"Ağaç yaşken eğilir.", m:"Education is best when young. (Lit: The tree bends while it is wet)."},
+            {t:"Denize düşen yılana sarılır.", m:"Desperate times call for desperate measures. (Lit: One falling into the sea hugs the snake)."},
+            {t:"Davulun sesi uzaktan hoş gelir.", m:"Things look better from a distance. (Lit: The sound of the drum sounds nice from afar)."},
+            {t:"Ne ekersen onu biçersin.", m:"You reap what you sow. (Lit: Whatever you plant, you harvest)."},
+            {t:"Her yiğidin bir yoğurt yiyişi vardır.", m:"Everyone has their own way of doing things. (Lit: Every brave man has a way of eating yogurt)."},
+            {t:"Köpek havlamakla kervan yürümez.", m:"Ignore the haters. (Lit: Dogs bark, but the caravan moves)."},
+            {t:"Meyve veren ağaç taşlanır.", m:"Successful people are criticized. (Lit: The tree that bears fruit is stoned)."},
+            {t:"Söz gümüşse sükut altındır.", m:"Silence is golden. (Lit: If speech is silver, silence is gold)."},
+            {t:"Akıl yaşta değil baştadır.", m:"Wisdom is in the head, not the age. (Lit: Reason is in the head, not in age)."},
+            {t:"Azı karar, çoğu zarar.", m:"Moderation is key. (Lit: Little is decision, too much is damage)."},
+            {t:"Bal tutan parmağını yalar.", m:"Those who handle resources benefit. (Lit: One holding honey licks their finger)."},
+            {t:"Besle kargayı oysun gözünü.", m:"Ungratefulness. (Lit: Feed the crow, it pecks your eye)."},
+            {t:"Büyük lokma ye, büyük söz söyleme.", m:"Don't be arrogant/brag. (Lit: Eat a big bite, don't say a big word)."},
+            {t:"Can çıkmayınca huy çıkmaz.", m:"Old habits die hard. (Lit: Until the soul leaves, the habit doesn't leave)."},
+            {t:"Çıkmadık candan ümit kesilmez.", m:"While there is life, there is hope. (Lit: Hope is not cut from the soul that hasn't left)."},
+            {t:"Dağ dağa kavuşmaz, insan insana kavuşur.", m:"People will meet again eventually. (Lit: Mountain doesn't meet mountain, human meets human)."},
+            {t:"Evdeki hesap çarşıya uymaz.", m:"Things don't always go to plan. (Lit: The account at home doesn't match the market)."},
+            {t:"Gelen gideni aratır.", m:"You may miss the person who left. (Lit: The comer makes you look for the goer)."},
+            {t:"Güneş girmeyen eve doktor girer.", m:"Sunlight/Fresh air is vital for health. (Lit: The doctor enters the house where sun doesn't enter)."},
+            {t:"Hatasız kul olmaz.", m:"Nobody is perfect. (Lit: There is no servant without error)."},
+            {t:"Hazıra dağ dayanmaz.", m:"Savings run out if you don't produce. (Lit: Mountain doesn't withstand the ready-made)."},
+            {t:"Her şerde bir hayır vardır.", m:"Every cloud has a silver lining. (Lit: There is a good in every evil)."},
+            {t:"Horoz ölür, gözü çöplükte kalır.", m:"One never loses their basic instincts. (Lit: The rooster dies, his eye remains on the garbage dump)."},
+            {t:"İki karpuz bir koltuğa sığmaz.", m:"You can't do two big jobs at once. (Lit: Two watermelons don't fit in one armchair)."},
+            {t:"İyilik yap denize at.", m:"Do good without expecting a reward. (Lit: Do good, throw it into the sea)."},
+            {t:"Kaçan balık büyük olur.", m:"The opportunity lost always seems biggest. (Lit: The escaping fish becomes big)."},
+            {t:"Keskin sirke küpüne zarardır.", m:"Anger hurts the angry person most. (Lit: Sharp vinegar damages its vessel)."},
+            {t:"Komşu komşunun külüne muhtaçtır.", m:"Neighbors need each other. (Lit: Neighbor is in need of neighbor's ash)."},
+            {t:"Mart kapıdan baktırır, kazma kürek yaktırır.", m:"March weather is deceptive. (Lit: March makes you look out the door and burn pickaxe/shovel)."},
+            {t:"Minareyi çalan kılıfını hazırlar.", m:"Those who do wrong prepare their excuse first. (Lit: He who steals the minaret prepares its cover)."},
+            {t:"Nerde hareket, orda bereket.", m:"Activity brings abundance. (Lit: Where there is movement, there is blessing)."},
+            {t:"Para parayı çeker.", m:"Money attracts money. (Lit: Money pulls money)."},
+            {t:"Rüzgar eken fırtına biçer.", m:"If you start trouble, you will face disaster. (Lit: He who sows wind reaps storm)."},
+            {t:"Sabreden derviş muradına ermiş.", m:"Patience leads to success. (Lit: The patient dervish reached his desire)."},
+            {t:"Sora sora Bağdat bulunur.", m:"You can find anything by asking. (Lit: By asking and asking, Baghdad is found)."},
+            {t:"Su akar yolunu bulur.", m:"Things eventually fall into place. (Lit: Water flows and finds its way)."},
+            {t:"Tavşan dağa küsmüş, dağın haberi olmamış.", m:"Holding a grudge against someone who doesn't care. (Lit: Rabbit got cross with the mountain, mountain didn't know)."},
+            {t:"Yalancının mumu yatsıya kadar yanar.", m:"Lies are revealed quickly. (Lit: The liar's candle burns until bedtime)."},
+            {t:"Yuvarlanan taş yosun tutmaz.", m:"Keep moving/changing. (Lit: Rolling stone catches no moss)."},
+            {t:"Zararın neresinden dönülse kârdır.", m:"Cut your losses early. (Lit: Wherever you turn from damage, it is profit)."}
+        ],
+        specials: [
+            {t:"Yakamoz", p:"Ya-ka-moz", m:"The reflection of moonlight on the water (Phosphorescence)."},
+            {t:"Hüzün", p:"Hu-zun", m:"A specific spiritual state of melancholic nostalgia."},
+            {t:"Gönül", p:"Go-nul", m:"The heart, but specifically the seat of one's feelings and conscience."},
+            {t:"Kısmet", p:"Kıs-met", m:"Fate, destiny, or luck (Accepting what happens)."},
+            {t:"Naz", p:"Naz", m:"Feigning reluctance or coyness when you actually want something."},
+            {t:"Üşenmek", p:"U-shen-mek", m:"To be too lazy or lacking the will to do something."},
+            {t:"Şifa", p:"Shi-fa", m:"Healing, cure, or relief from illness."},
+            {t:"Estafurullah", p:"Es-ta-fu-rul-lah", m:"Don't mention it / Not at all (Used humbly when praised)."},
+            {t:"Başın sağ olsun", p:"Ba-shın Sa Ol-sun", m:"Standard condolence: 'May your head be healthy'."},
+            {t:"Elinize sağlık", p:"E-li-ni-ze Sa-lık", m:"'Health to your hands' (Said to the cook)."},
+            {t:"Hayırlısı", p:"Ha-yır-lı-sı", m:"'Whatever is best' (Leaving the outcome to God/Fate)."},
+            {t:"Kolay gelsin", p:"Ko-lay Gel-sin", m:"'May it come easy' (Greeting to someone working)."},
+            {t:"Sıhhatler olsun", p:"Sıh-hat-ler Ol-sun", m:"'Health to you' (Said after a haircut or bath)."},
+            {t:"Güle güle kullan", p:"Gu-le Gu-le Kul-lan", m:"'Use it smilingly' (Said when someone buys something new)."},
+            {t:"Geçmiş olsun", p:"Gech-mish Ol-sun", m:"'May it be past' (Get well soon / After a bad event)."},
+            {t:"Hoş bulduk", p:"Hosh Bul-duk", m:"Response to Welcome ('We found it pleasant')."},
+            {t:"Afiyet olsun", p:"A-fi-yet Ol-sun", m:"Bon Appetit ('May it be health')."},
+            {t:"Bereket versin", p:"Be-re-ket Ver-sin", m:"'May God give abundance' (Said by seller receiving money)."},
+            {t:"Aşkolsun", p:"Ashk-Ol-sun", m:"'Let there be love' (Used ironically: 'Shame on you')."},
+            {t:"Boşver", p:"Bosh-ver", m:"'Give it empty' (Never mind / Let it go)."},
+            {t:"Eyvallah", p:"Ey-val-lah", m:"Thanks / Goodbye / I accept (Multipurpose resignation)."},
+            {t:"Muvaffakiyet", p:"Mu-vaf-fa-ki-yet", m:"Success (Old Turkish, formal)."},
+            {t:"Hissikablelvuku", p:"His-si-kab-lel-vu-ku", m:"Premonition (Feeling before it happens)."},
+            {t:"Cihannüma", p:"Ji-han-nu-ma", m:"Something that shows the whole world."}
+        ]
+    };
+
+    /* ----------------------------------------------------------------
+       APP STATE & LOGIC
+    ---------------------------------------------------------------- */
+    
+    // State keys
+    const STREAK_KEY = 'trk_streak_count';
+    const LAST_VISIT_KEY = 'trk_last_visit';
+    const STATS_KEY = 'trk_daily_stats';
+
+    let currentViewDate = new Date();
+
+    function initApp() {
+        // 1. Initialize Date Picker
+        const datePicker = document.getElementById('date-picker');
+        datePicker.valueAsDate = new Date();
+        datePicker.max = new Date().toISOString().split("T")[0]; // Cannot go to future
+        
+        datePicker.addEventListener('change', (e) => {
+            currentViewDate = new Date(e.target.value);
+            renderContent();
+        });
+
+        // 2. Load Streak & Stats
+        loadStreak();
+        loadDailyStats();
+
+        // 3. Render
+        renderContent();
+        setupQuiz();
+    }
+
+    function getDayOfYear(dateObj) {
+        const start = new Date(dateObj.getFullYear(), 0, 0);
+        const diff = dateObj - start;
+        return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function renderContent() {
+        const dayOfYear = getDayOfYear(currentViewDate);
+        const year = currentViewDate.getFullYear();
+        const month = currentViewDate.getMonth();
+
+        // Selection Logic
+        const wordIndex = (dayOfYear + year) % DB.words.length;
+        const idiomIndex = (dayOfYear + 20) % DB.idioms.length;
+        const proverbIndex = (dayOfYear + 40) % DB.proverbs.length;
+        
+        // Special logic: Rotate monthly, but shift by year to use all 24
+        const totalMonths = (year * 12) + month; 
+        const specialIndex = totalMonths % DB.specials.length;
+
+        const word = DB.words[wordIndex];
+        const idiom = DB.idioms[idiomIndex];
+        const proverb = DB.proverbs[proverbIndex];
+        const special = DB.specials[specialIndex];
+
+        // Update DOM
+        updateCard('word', word);
+        updateCard('idiom', idiom);
+        updateCard('proverb', proverb);
+        
+        // Special Card
+        document.getElementById('special-tr').textContent = special.t;
+        document.getElementById('special-pron').textContent = `/${special.p}/`;
+        document.getElementById('special-en').textContent = special.m;
+    }
+
+    function updateCard(type, data) {
+        document.getElementById(`${type}-tr`).textContent = data.t;
+        document.getElementById(`${type}-en`).textContent = data.m;
+        // Word has pronunciation, others don't usually (except special)
+        if(data.p && document.getElementById(`${type}-pron`)) {
+            document.getElementById(`${type}-pron`).textContent = `/${data.p}/`;
+        }
+    }
+
+    /* ----------------------------------------------------------------
+       STREAK & SCORE LOGIC
+    ---------------------------------------------------------------- */
+
+    function loadStreak() {
+        const streak = localStorage.getItem(STREAK_KEY) || 0;
+        document.getElementById('streak-count').textContent = streak;
+    }
+
+    function updateStreak() {
+        const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+        const todayStr = new Date().toDateString();
+
+        if (lastVisit === todayStr) return; // Already counted today
+
+        let streak = parseInt(localStorage.getItem(STREAK_KEY) || 0);
+        
+        // Check if yesterday was visited
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastVisit === yesterday.toDateString()) {
+            streak++; // Continue streak
+        } else {
+            streak = 1; // Reset or Start new
+        }
+
+        localStorage.setItem(STREAK_KEY, streak);
+        localStorage.setItem(LAST_VISIT_KEY, todayStr);
+        document.getElementById('streak-count').textContent = streak;
+    }
+
+    function loadDailyStats() {
+        const todayStr = new Date().toDateString();
+        let stats = JSON.parse(localStorage.getItem(STATS_KEY));
+
+        // Reset if new day
+        if (!stats || stats.date !== todayStr) {
+            stats = { date: todayStr, correct: 0, wrong: 0 };
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        }
+
+        document.getElementById('score-correct').textContent = stats.correct;
+        document.getElementById('score-wrong').textContent = stats.wrong;
+    }
+
+    function updateStats(isCorrect) {
+        const todayStr = new Date().toDateString();
+        let stats = JSON.parse(localStorage.getItem(STATS_KEY));
+        
+        if (!stats || stats.date !== todayStr) {
+            stats = { date: todayStr, correct: 0, wrong: 0 };
+        }
+
+        if (isCorrect) stats.correct++;
+        else stats.wrong++;
+
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        
+        document.getElementById('score-correct').textContent = stats.correct;
+        document.getElementById('score-wrong').textContent = stats.wrong;
+    }
+
+    function resetApp() {
+        if(confirm("Reset all streak and score data?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    /* ----------------------------------------------------------------
+       QUIZ LOGIC
+    ---------------------------------------------------------------- */
+
+    function setupQuiz() {
+        const container = document.getElementById('quiz-options');
+        const feedback = document.getElementById('quiz-feedback');
+        const question = document.getElementById('quiz-question');
+        
+        container.innerHTML = '';
+        feedback.textContent = '';
+
+        // Random Question
+        const randomIndex = Math.floor(Math.random() * DB.words.length);
+        const correctWord = DB.words[randomIndex];
+        question.textContent = correctWord.t;
+
+        // Generate Options
+        let options = [correctWord];
+        let safety = 0;
+        while(options.length < 4 && safety < 100) {
+            let rnd = Math.floor(Math.random() * DB.words.length);
+            let candidate = DB.words[rnd];
+            if(!options.includes(candidate)) options.push(candidate);
+            safety++;
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        // Render Buttons
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.textContent = opt.m; 
+            
+            btn.onclick = () => {
+                // Lock buttons
+                document.querySelectorAll('.quiz-btn').forEach(b => b.disabled = true);
+
+                // Streak Logic (Update on first attempt of the day)
+                updateStreak();
+
+                if(opt === correctWord) {
+                    btn.classList.add('correct');
+                    feedback.textContent = "Doğru! (Correct) 🎉";
+                    feedback.style.color = "#10b981";
+                    updateStats(true);
+                } else {
+                    btn.classList.add('wrong');
+                    feedback.textContent = `Yanlış. Answer: ${correctWord.m}`;
+                    feedback.style.color = "#ef4444";
+                    
+                    // Show correct
+                    Array.from(container.children).forEach(c => {
+                        if(c.textContent === correctWord.m) c.classList.add('correct');
+                    });
+                    updateStats(false);
+                }
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+
+</script>
+</body>
+</html>
